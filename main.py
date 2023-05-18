@@ -1,11 +1,14 @@
+import os
+import sys
 import json
 
 from libs import DbConnection
+from libs.utils import resource_path
 from services.production_planning import ProductionPlanning
 
 
 if __name__ == "__main__":
-    with open("./dbconfig.json", 'r') as jsonfile:
+    with open(resource_path("./dbconfig.json"), 'r') as jsonfile:
         config = json.load(jsonfile)
 
     db_connection = DbConnection(

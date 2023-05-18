@@ -3,6 +3,7 @@ from docplex.cp.model import *
 from pandas import DataFrame
 
 from services.production_planning.job_duration_calculator import JobDurationCalculator
+from libs.utils import resource_path
 
 
 class Planner:
@@ -116,7 +117,7 @@ class Planner:
 
         msol = self.mdl.solve(
             log_output=True,
-            execfile='/Applications/CPLEX_Studio_Community2211/cpoptimizer/bin/arm64_osx/cpoptimizer',
+            execfile=resource_path('./cpoptimizer'),
             TimeLimit=120
         )
         
