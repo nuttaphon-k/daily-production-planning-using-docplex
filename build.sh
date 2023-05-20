@@ -8,4 +8,3 @@ pyinstaller -F --name planner main.py --noconfirm \
     --add-data "dbconfig.json:." \
     --add-data "cpoptimizer:." \
     --additional-hooks-dir=. \
-    --debug=imports

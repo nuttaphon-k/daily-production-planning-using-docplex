@@ -12,7 +12,7 @@ class Repository:
         except Exception as e:
             self.__conn.rollback()
             raise e
-    
+
     def run_in_transaction(self, task, kwargs: dict = None, is_raise: bool = True, is_commit: bool = True):
         if kwargs is None:
             kwargs = dict()
