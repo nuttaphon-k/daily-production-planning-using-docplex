@@ -82,7 +82,7 @@ class Planner:
                 temp2 = []
                 for j2 in self.jobs:
                     if (isinstance(processing_itv_vars[j1][m], expression.CpoIntervalVar) & isinstance(processing_itv_vars[j2][m], expression.CpoIntervalVar)):
-                        if j1 == j2:
+                        if self.pending_task.loc[self.jobs_dict.get(j1)]['mat_id'] == self.pending_task.loc[self.jobs_dict.get(j2)]['mat_id']:
                             temp2.append(0)
                         else:
                             temp2.append(setup_time)
