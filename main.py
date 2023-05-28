@@ -6,17 +6,30 @@ from services.production_planning import ProductionPlanning
 
 
 if __name__ == "__main__":
-    with open(resource_path("./dbconfig.json"), 'r') as jsonfile:
-        config = json.load(jsonfile)
+    db_connection = DbConnection()
+    try:
+        with open(resource_path("./dbconfig.json"), 'r') as jsonfile:
+            config = json.load(jsonfile)
+        db_connection.connect(
+            config=config
+        )
+    except Exception as e:
+        print(e)
+        print("Connect database error")
 
-    db_connection = DbConnection(
-        config=config
-    )
+    if db_connection.get_connector():
+        try:
+            conn = db_connection.get_connector()
 
-    conn = db_connection.get_connector()
+            production_planning = ProductionPlanning(
+                conn=conn
+            )
 
-    production_planning = ProductionPlanning(
-        conn=conn
-    )
+            production_planning.generate_production_plan()
+        except Exception as e:
+            print(e)
+            print("Generate plan error")
+    else:
+        print("Databse connection not found")
 
-    production_planning.generate_production_plan()
+    input("Close...")

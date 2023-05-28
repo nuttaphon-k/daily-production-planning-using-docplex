@@ -105,21 +105,24 @@ class ProductionPlanning:
 
             try:
                 solution = planner.generate()
-                solution.print_solution()
 
                 processing_itv_vars = planner.get_processing_itv_vars()
 
-                scheduler = Scheduler(
-                    solution=solution,
-                    jobs_dict=jobs_dict,
-                    machines_dict=machines_dict,
-                    processing_itv_vars=processing_itv_vars
-                )
-
-                schdule_df = scheduler.main(
-                    selected_pending_job=selected_pending_job
-                )
-
-                print(schdule_df)
             except BaseException as e:
                 print(e)
+
+            if planner.get_solution_status():
+                try:
+                    scheduler = Scheduler(
+                        solution=solution,
+                        jobs_dict=jobs_dict,
+                        machines_dict=machines_dict,
+                        processing_itv_vars=processing_itv_vars
+                    )
+
+                    schdule_df = scheduler.main(
+                        selected_pending_job=selected_pending_job
+                    )
+
+                except BaseException as e:
+                    print(e)

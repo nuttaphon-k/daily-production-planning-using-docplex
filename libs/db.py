@@ -4,9 +4,9 @@ CONFIG_KEYS = ["user", "password", "host", "database"]
 
 
 class DbConnection:
-    def __init__(self, config):
-        self.connect(config)
-
+    def __init__(self):
+        self.__conn = None
+        
     def __validate_config(self, config: dict):
         for key in CONFIG_KEYS:
             if not config.get(key):

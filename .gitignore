@@ -1,6 +1,9 @@
 .env
+.vscode
+venv
 .DS_Store
 dbconfig.json
 build
 dist
 planner.spec
+**/__pycache__

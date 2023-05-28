@@ -1,3 +1,4 @@
+import platform
 from typing import Dict
 from docplex.cp.model import *
 from pandas import DataFrame
@@ -25,6 +26,7 @@ class Planner:
         self.duration_calculator = duration_calculator
         self.setup_time_dict = setup_time_dict
         self.processing_itv_vars = []
+        self.__solution_status = False
 
     def __prepare_processing_interval(self):
         processing_itv_vars = []
@@ -123,8 +125,12 @@ class Planner:
             setup_matrix = self.__create_setup_matrix(processing_itv_vars)
 
             for m in self.machines:
-                self.mdl.add(self.mdl.no_overlap(
-                    sequence_vars[m], setup_matrix[m]))
+                if len(setup_matrix[m]) > 0:
+                    self.mdl.add(self.mdl.no_overlap(
+                        sequence_vars[m], setup_matrix[m]))
+                else:
+                    self.mdl.add(self.mdl.no_overlap(
+                        sequence_vars[m]))
 
         else:
             for m in self.machines:
@@ -139,6 +145,12 @@ class Planner:
 
     def get_processing_itv_vars(self):
         return self.processing_itv_vars
+    
+    def get_solution_status(self):
+        return self.__solution_status
+    
+    def __update_solution_status(self, status=True):
+        self.__solution_status = status
 
     def generate(self):
         processing_itv_vars, non_none_processing_itv_vars_list = self.__prepare_processing_interval()
@@ -149,10 +161,22 @@ class Planner:
             processing_itv_vars)
         self.__add_objective_function(non_none_processing_itv_vars_list)
 
+        if platform.system() in (['Linux', 'Darwin']):
+            # Linux or MAC OS X
+            execfile = './cpoptimizer'
+
+        elif platform.system() == 'Windows':
+            # Windows
+            execfile = './cpoptimizer.exe'
+        
+        else:
+            raise Exception('Invalid platform')
+
         msol = self.mdl.solve(
-            log_output=True,
-            execfile=resource_path('./cpoptimizer'),
+            execfile=resource_path(execfile),
             TimeLimit=120
         )
+
+        self.__update_solution_status()
 
         return msol
