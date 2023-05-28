@@ -24,6 +24,7 @@ class Planner:
         self.pending_task = pending_task
         self.duration_calculator = duration_calculator
         self.setup_time_dict = setup_time_dict
+        self.processing_itv_vars = []
 
     def __prepare_processing_interval(self):
         processing_itv_vars = []
@@ -136,8 +137,13 @@ class Planner:
 
         self.mdl.add(self.mdl.minimize(objective))
 
+    def get_processing_itv_vars(self):
+        return self.processing_itv_vars
+
     def generate(self):
         processing_itv_vars, non_none_processing_itv_vars_list = self.__prepare_processing_interval()
+        self.processing_itv_vars = processing_itv_vars
+
         self.__add_jon_must_be_done_constraint(processing_itv_vars)
         self.__add_no_overlab_and_set_up_overhead_constraint(
             processing_itv_vars)
