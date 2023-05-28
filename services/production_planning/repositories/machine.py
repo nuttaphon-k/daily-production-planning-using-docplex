@@ -1,5 +1,6 @@
 from libs.db_manager import CustomRepository
 
+
 class Machine(CustomRepository):
     def get_machine_master(self):
         cur = self.conn.cursor()

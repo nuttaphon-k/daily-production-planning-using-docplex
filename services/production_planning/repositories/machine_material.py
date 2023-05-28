@@ -1,5 +1,6 @@
 from libs.db_manager import CustomRepository
 
+
 class MachineMaterial(CustomRepository):
     def get_machine_material(self):
         cur = self.conn.cursor()
