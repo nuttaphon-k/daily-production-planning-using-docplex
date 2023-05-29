@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\const",
+    "\\libs",
+    "\\services",
+    "\\services\\production_planning",
+    "\\services\\production_planning\\repositories"
+  ],
+  "SelectedNode": "\\build_win.sh",
+  "PreviewInSolutionExplorer": false
+}
