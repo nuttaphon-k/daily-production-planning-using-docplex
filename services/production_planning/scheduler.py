@@ -22,6 +22,7 @@ class Scheduler:
         self.msol = solution
         self.jobs = list(jobs_dict.keys())
         self.machines = list(machines_dict.keys())
+        self.machines_dict = machines_dict
         self.processing_itv_vars = processing_itv_vars
 
     def __create_solution_dataframe(self):
@@ -188,5 +189,10 @@ class Scheduler:
         machine_timetable_df = machine_timetable_df.reset_index(drop=True)
         selected_pending_job = selected_pending_job.merge(machine_timetable_df[[
                                                           'job_id', 'start_timestamp', 'end_timestamp']], how='left', on='job_id')
+        selected_pending_job['machine_id'] = selected_pending_job['machine_id'].map(self.machines_dict)
+        selected_pending_job = selected_pending_job[['so_id', 'mat_id', 'res_draft_volume', 'start_timestamp', 'end_timestamp', 'machine_id']]
+        selected_pending_job = selected_pending_job.rename(columns={'res_draft_volume': 'res_volume'})
+        selected_pending_job['start_timestamp'] = selected_pending_job['start_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        selected_pending_job['end_timestamp'] = selected_pending_job['end_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
 
         return selected_pending_job

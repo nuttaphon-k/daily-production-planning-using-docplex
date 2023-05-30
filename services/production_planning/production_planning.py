@@ -55,6 +55,19 @@ class ProductionPlanning:
 
         return dict(zip(machines_dict.keys(), select_machine_df['machine_change_time'].tolist()))
 
+    def __insert_production_plan(self, schedule_df: pd.DataFrame):
+        schedule_values = schedule_df.to_dict('records')
+
+        def insert_plan():
+            self.repository.pd_plan.delete_plan()
+            self.repository.pd_plan.insert_plan(
+                values=schedule_values
+            )
+        
+        self.repository.run_in_transaction(
+            task=insert_plan
+        )
+
     def generate_production_plan(self):
         machine_master, machine_material, material_master = self.__retreive_master_data()
 
@@ -66,6 +79,8 @@ class ProductionPlanning:
             machine_material=machine_material,
             material_master=material_master
         )
+
+        all_schedule_df = pd.DataFrame()
 
         for machines_type_list in MACHINE_GROUP:
             print("Select machine type: " +
@@ -124,5 +139,15 @@ class ProductionPlanning:
                         selected_pending_job=selected_pending_job
                     )
 
+                    all_schedule_df = pd.concat([all_schedule_df, schdule_df], sort=False, axis=0, ignore_index=True)
+
                 except BaseException as e:
                     print(e)
+        
+        if len(all_schedule_df) > 0:
+            try:
+                self.__insert_production_plan(
+                    schedule_df=all_schedule_df
+                )
+            except Exception as e:
+                print(e)
