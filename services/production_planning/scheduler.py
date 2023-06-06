@@ -5,11 +5,12 @@ import numpy as np
 from docplex.cp.solution import CpoSolveResult, CpoIntervalVar, CpoIntervalVarSolution
 
 from const import TIME_SCALE
-from const.working_hour import working_hour_interval
+from const.working_hour import working_hour_interval, overtime_hour_interval
+from libs.loggers import logging
+from libs.settings import settings
 
 
-current_timestamp = datetime.now()
-
+logger = logging.getLogger('scheduler')
 
 class Scheduler:
     def __init__(
@@ -18,12 +19,19 @@ class Scheduler:
         jobs_dict: Dict[int, int],
         machines_dict: Dict[int, int],
         processing_itv_vars: List[List[CpoIntervalVar]],
+        work_date: datetime
     ):
+        logger.info('Start scheduling ...')
         self.msol = solution
         self.jobs = list(jobs_dict.keys())
         self.machines = list(machines_dict.keys())
         self.machines_dict = machines_dict
         self.processing_itv_vars = processing_itv_vars
+        self.work_date = work_date
+        if settings.get_setting('ot'):
+            self.working_hour_interval = working_hour_interval + overtime_hour_interval
+        else:
+            self.working_hour_interval = working_hour_interval
 
     def __create_solution_dataframe(self):
         solutions = []
@@ -51,9 +59,9 @@ class Scheduler:
 
     def __create_job_time_interval(self, df: pd.DataFrame):
         time_table = []
-        work_date = datetime.strptime('{} {}'.format(current_timestamp.strftime(
-            '%Y-%m-%d'), '00:00:00'), '%Y-%m-%d %H:%M:%S') + timedelta(days=1)
         processed_job = 0
+
+        work_date = self.work_date
 
         df['working_minutes'] = ((df['end'] - df['start'])
                                  * TIME_SCALE).astype(int)
@@ -71,7 +79,7 @@ class Scheduler:
         df['remaining_setup_time'] = df['setup_time']
 
         while processed_job < len(df):
-            for working_hour in working_hour_interval:
+            for working_hour in self.working_hour_interval:
                 use_default_start_time = True
                 start_working_hour, end_working_hour = working_hour
                 start_working_hour_dt = self.__create_time_for_comparison(
@@ -158,7 +166,12 @@ class Scheduler:
 
                         processed_job = processed_job + 1
 
-            work_date = work_date + timedelta(days=1)
+            is_new_work_date_correct = False
+            while not is_new_work_date_correct:
+                work_date = work_date + timedelta(days=1)
+                if work_date.strftime('%Y-%m-%d') not in settings.get_setting('holiday'):
+                    is_new_work_date_correct = True
+
         return time_table
 
     def main(self, selected_pending_job: pd.DataFrame):
@@ -194,5 +207,7 @@ class Scheduler:
         selected_pending_job = selected_pending_job.rename(columns={'res_draft_volume': 'res_volume'})
         selected_pending_job['start_timestamp'] = selected_pending_job['start_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
         selected_pending_job['end_timestamp'] = selected_pending_job['end_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+        logger.info("Success.")
 
         return selected_pending_job

@@ -24,6 +24,10 @@ class DbConnection:
 
     def get_connector(self):
         return self.__conn
-
-    def close_connector(self):
-        self.__conn.close()
+    
+    def __del__(self):
+        try:
+            if self.__conn is not None:
+                self.__conn.close()
+        except Exception as e:
+            pass
