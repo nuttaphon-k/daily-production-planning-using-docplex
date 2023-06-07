@@ -2,3 +2,5 @@ from .machine_group import MACHINE_GROUP
 
 IRON_DENSITY = 7875
 TIME_SCALE = 15
+DEFUALT_RUN_TIME_LIMIT = 60
+OT = False
