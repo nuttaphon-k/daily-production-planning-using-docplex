@@ -25,7 +25,7 @@ class Repository:
 
             return result
 
-        except BaseException as e:
+        except Exception as e:
             self.__conn.rollback()
             if is_raise:
                 raise e

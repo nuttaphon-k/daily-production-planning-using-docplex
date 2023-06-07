@@ -178,7 +178,7 @@ class ProductionPlanning:
 
                 processing_itv_vars = planner.get_processing_itv_vars()
 
-            except BaseException as e:
+            except Exception as e:
                 logger.debug(e)
                 logger.debug(traceback.format_exc())
                 logger.error('Plan for machine type: {} failed.'.format(
@@ -206,7 +206,7 @@ class ProductionPlanning:
                     all_schedule_df = pd.concat(
                         [all_schedule_df, schdule_df], sort=False, axis=0, ignore_index=True)
 
-                except BaseException as e:
+                except Exception as e:
                     logger.debug(e)
                     logger.debug(traceback.format_exc())
                     logger.error('Create schedule for machine type: {} failed.'.format(

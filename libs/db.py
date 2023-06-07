@@ -17,7 +17,7 @@ class DbConnection:
             self.__validate_config(config)
         except AttributeError as e:
             raise e
-        except BaseException:
+        except Exception:
             raise Exception('Something went wrong')
 
         self.__conn = mariadb.connect(**config)

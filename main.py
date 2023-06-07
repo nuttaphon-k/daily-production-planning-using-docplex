@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import time
 import traceback
@@ -150,7 +151,7 @@ def main():
                     value=True
                 )
 
-                logging.info("The working hours are include OT.")
+                logger.info("The working hours are include OT.")
                 time.sleep(1)
                 config_ot_complete=True
             elif is_OT == 'n':
@@ -179,5 +180,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    input(">>>Press enter to exit the program ...")
+    try:
+        main()
+        input(">>>Press enter to exit the program ...")
+    except KeyboardInterrupt:
+        print("The program was iterrupted.")
+        print("Close program.")
+    
+    sys.exit(0)

@@ -97,7 +97,7 @@ class Planner:
 
         return setup_matrix
 
-    def __add_jon_must_be_done_constraint(self, processing_itv_vars):
+    def __add_job_must_be_done_constraint(self, processing_itv_vars):
         for j in self.jobs:
             processing_itv_vars_at_j = processing_itv_vars[j]
             non_none_processing_itv_vars_at_j = []
@@ -114,7 +114,7 @@ class Planner:
                 ) == 1
             )
 
-    def __add_no_overlab_and_set_up_overhead_constraint(self, processing_itv_vars):
+    def __add_no_overlap_and_set_up_overhead_constraint(self, processing_itv_vars):
         sequence_vars = [
             self.mdl.sequence_var(
                 [processing_itv_vars[j][m] for j in self.jobs if isinstance(
@@ -213,8 +213,8 @@ class Planner:
         processing_itv_vars = self.__prepare_processing_interval()
         self.processing_itv_vars = processing_itv_vars
 
-        self.__add_jon_must_be_done_constraint(processing_itv_vars)
-        sequence_var = self.__add_no_overlab_and_set_up_overhead_constraint(
+        self.__add_job_must_be_done_constraint(processing_itv_vars)
+        sequence_var = self.__add_no_overlap_and_set_up_overhead_constraint(
             processing_itv_vars)
         self.__add_objective_function(sequence_var)
 
