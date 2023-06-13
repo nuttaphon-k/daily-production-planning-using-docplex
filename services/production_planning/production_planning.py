@@ -5,7 +5,7 @@ from typing import Dict
 from datetime import timedelta
 import traceback
 
-from const import MACHINE_GROUP, TIME_SCALE
+from const import MACHINE_GROUP, N_DATE_BEFORE_DEADLINE, TIME_SCALE
 from const.working_hour import working_hour_interval, overtime_hour_interval
 from libs.settings import settings
 from libs.utils import create_time_for_comparison
@@ -91,7 +91,7 @@ class ProductionPlanning:
 
     def __create_due_date_time_unit(self, pending_job):
         pending_job['deadline_date'] = pending_job['so_pub_date'] + \
-            timedelta(days=14)
+            timedelta(days=N_DATE_BEFORE_DEADLINE)
         time_unit_per_day = 0
 
         for working_hour in self.working_hour_interval:
@@ -195,6 +195,7 @@ class ProductionPlanning:
                         jobs_dict=jobs_dict,
                         machines_dict=machines_dict,
                         processing_itv_vars=processing_itv_vars,
+                        duration_calculator=duration_calculator,
                         work_date=settings.get_start_working_date(
                             date_type="datetime")
                     )
@@ -234,7 +235,7 @@ class ProductionPlanning:
                 logger.debug(traceback.format_exc())
                 logger.error("Failed.")
 
-                raise Exception("Insert schudle to the database failed.")
+                raise Exception("Insert schedule to the database failed.")
         else:
             logger.error("All planning failed.")
 

@@ -39,8 +39,8 @@ class PdPlan(CustomRepository):
         cur = self.conn.cursor()
         cur.executemany(
             """
-                INSERT INTO pd_plan (so_id, mat_id, res_volume, start_timestamp, end_timestamp, machine_id, pd_plan_pub_date)
-                VALUES (%(so_id)s, %(mat_id)s, %(res_volume)s, %(start_timestamp)s, %(end_timestamp)s, %(machine_id)s, NOW())
+                INSERT INTO pd_plan (so_id, mat_id, res_volume, start_timestamp, end_timestamp, machine_id, pd_plan_pub_date, batch_volume, remaining_volume)
+                VALUES (%(so_id)s, %(mat_id)s, %(res_volume)s, %(start_timestamp)s, %(end_timestamp)s, %(machine_id)s, NOW(), %(batch_volume)s, %(remaining_volume)s)
             """,
             values
         )
