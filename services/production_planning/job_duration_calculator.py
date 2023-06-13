@@ -28,7 +28,7 @@ class JobDurationCalculator:
             material_info = self.material_master.loc[self.mat_id]
 
             if machine_info['machine_weight_hour'] > 0:
-                return int(np.ceil(pending_volume / float(machine_info['machine_weight_hour'])))
+                return int(np.ceil(pending_volume / float(machine_info['machine_weight_hour']) * 60 / TIME_SCALE ))
 
             else:
                 machine_spd_mul = float(machine_info['machine_spd_mul'])
@@ -38,6 +38,23 @@ class JobDurationCalculator:
                     np.pi * pow(mat_size, 2) / 4 * 60 * TIME_SCALE
 
                 return int(np.ceil(pending_volume / production_rate))
+        else:
+            return None
+    
+    def calculate_weight(self, time_unit: int) -> Union[float, None]:
+        if self.is_compatible:
+            machine_info = self.machine_master.loc[self.machine_id]
+            material_info = self.material_master.loc[self.mat_id]
+            if machine_info['machine_weight_hour'] > 0:
+                return time_unit * TIME_SCALE / 60 * float(machine_info['machine_weight_hour'])
+            else:
+                machine_spd_mul = float(machine_info['machine_spd_mul'])
+                mat_size = float(material_info['mat_size']) / 1000
+
+                production_rate = IRON_DENSITY * machine_spd_mul * \
+                    np.pi * pow(mat_size, 2) / 4 * 60 * TIME_SCALE
+
+                return time_unit * production_rate
         else:
             return None
 

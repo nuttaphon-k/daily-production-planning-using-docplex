@@ -8,6 +8,7 @@ from const import TIME_SCALE
 from const.working_hour import working_hour_interval, overtime_hour_interval
 from libs.loggers import logging
 from libs.settings import settings
+from services.production_planning.job_duration_calculator import JobDurationCalculator
 
 
 logger = logging.getLogger('scheduler')
@@ -19,6 +20,7 @@ class Scheduler:
         jobs_dict: Dict[int, int],
         machines_dict: Dict[int, int],
         processing_itv_vars: List[List[CpoIntervalVar]],
+        duration_calculator: JobDurationCalculator,
         work_date: datetime
     ):
         logger.info('Start scheduling ...')
@@ -28,6 +30,7 @@ class Scheduler:
         self.machines_dict = machines_dict
         self.processing_itv_vars = processing_itv_vars
         self.work_date = work_date
+        self.duration_calculator = duration_calculator
         if settings.get_setting('ot'):
             self.working_hour_interval = working_hour_interval + overtime_hour_interval
         else:
@@ -173,6 +176,22 @@ class Scheduler:
                     is_new_work_date_correct = True
 
         return time_table
+    
+    def __calculate_weight(self, data: pd.Series):
+        self.duration_calculator.register(
+            machine_id=data['machine_id'],
+            mat_id=data['mat_id']
+        )
+
+        working_time_unit = int((data['end_timestamp'] - data['start_timestamp']).seconds / 60 / TIME_SCALE)
+
+        weight = self.duration_calculator.calculate_weight(
+            time_unit=working_time_unit
+        )
+
+        self.duration_calculator.clear()
+
+        return weight
 
     def main(self, selected_pending_job: pd.DataFrame):
         solutions_df = self.__create_solution_dataframe()
@@ -203,11 +222,39 @@ class Scheduler:
         selected_pending_job = selected_pending_job.merge(machine_timetable_df[[
                                                           'job_id', 'start_timestamp', 'end_timestamp']], how='left', on='job_id')
         selected_pending_job['machine_id'] = selected_pending_job['machine_id'].map(self.machines_dict)
-        selected_pending_job = selected_pending_job[['so_id', 'mat_id', 'res_draft_volume', 'start_timestamp', 'end_timestamp', 'machine_id']]
+
+        weight_list = selected_pending_job.apply(lambda x: self.__calculate_weight(x), axis=1).tolist()
+        selected_pending_job['batch_volume'] = weight_list
+
+        selected_pending_job = selected_pending_job[['so_id', 'mat_id', 'res_draft_volume', 'batch_volume', 'start_timestamp', 'end_timestamp', 'machine_id']]
         selected_pending_job = selected_pending_job.rename(columns={'res_draft_volume': 'res_volume'})
         selected_pending_job['start_timestamp'] = selected_pending_job['start_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
         selected_pending_job['end_timestamp'] = selected_pending_job['end_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        selected_pending_job['res_volume'] = selected_pending_job['res_volume'].astype(float)
+        
+        remaining_volume_list = [selected_pending_job.iloc[0]['res_volume'] - selected_pending_job.iloc[0]['batch_volume']]
+        last_remaining_weight = remaining_volume_list[0]
+        for i in range(1, len(selected_pending_job)):
+            last_so_id = selected_pending_job.iloc[i-1]['so_id']
+            last_mat_id = selected_pending_job.iloc[i-1]['mat_id']
+
+            current_so_id = selected_pending_job.iloc[i]['so_id']
+            current_mat_id = selected_pending_job.iloc[i]['mat_id']
+
+            if (last_so_id == current_so_id) & (last_mat_id == current_mat_id):
+                remaining_volume = last_remaining_weight - selected_pending_job.iloc[i]['batch_volume']
+            else:
+                remaining_volume = selected_pending_job.iloc[i]['res_volume'] - selected_pending_job.iloc[i]['batch_volume']
+            
+            remaining_volume_list.append(
+                    remaining_volume
+                )
+            last_remaining_weight = remaining_volume
+
+        selected_pending_job['remaining_volume'] = remaining_volume_list
+        selected_pending_job['remaining_volume'] = selected_pending_job['remaining_volume'].round(2)
 
         logger.info("Success.")
 
         return selected_pending_job
+    
